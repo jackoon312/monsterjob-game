@@ -1,0 +1,335 @@
+{
+  "info": {
+    "_postman_id": "9d20557f-c207-42a3-91ec-d5a617e91917",
+    "name": "MonsterJob API",
+    "description": "Collection for the MonsterJob backend (auth + creatures so far). Select the MonsterJob environment before running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "_postman_id": "38de2f71-d028-4644-a42b-f3bd8bb87ba7",
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"joshua\",\n  \"email\": \"joshua@example.com\",\n  \"password\": \"test1234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const data = pm.response.json();",
+              "    pm.environment.set('token', data.token);",
+              "    console.log('Token saved to environment');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "_postman_id": "367fb128-5717-4b2a-b6da-c4af9c0f2419",
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"joshua@example.com\",\n  \"password\": \"test1234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const data = pm.response.json();",
+              "    pm.environment.set('token', data.token);",
+              "    console.log('Token saved to environment');",
+              "} else {",
+              "    console.log('Login failed, token NOT updated. Status:', pm.response.code);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "_postman_id": "e91162bf-52f4-4d74-ba57-c14390fdb406",
+      "name": "Get Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        }
+      }
+    },
+    {
+      "_postman_id": "aa96e73d-20b4-4a57-a03a-f589298931a9",
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "logout"]
+        }
+      }
+    },
+    {
+      "_postman_id": "59961a8b-4cac-4c19-aad5-451392500ff4",
+      "name": "Get All Species",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures/species",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures", "species"]
+        }
+      }
+    },
+    {
+      "_postman_id": "48d55def-e0d3-4b6e-9dba-7905f5d53be0",
+      "name": "Catch Creature",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"creatureSpeciesId\": \"PASTE_SPECIES_ID_HERE\",\n  \"nickname\": \"Sparky\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const data = pm.response.json();",
+              "    pm.environment.set('creatureId', data.creature._id);",
+              "    console.log('creatureId saved');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "_postman_id": "92224e4b-30e0-4a26-90cd-176fd1013f1a",
+      "name": "List My Creatures",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures"]
+        }
+      }
+    },
+    {
+      "_postman_id": "4153feeb-25c5-4b5a-ad09-4f870d311ec7",
+      "name": "Get Creature By Id",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures/{{creatureId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures", "{{creatureId}}"]
+        }
+      }
+    },
+    {
+      "_postman_id": "4a5a51ba-4461-468d-a76d-8de14292a151",
+      "name": "Update Creature",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nickname\": \"Blaze\",\n  \"isFavorite\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures/{{creatureId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures", "{{creatureId}}"]
+        }
+      }
+    },
+    {
+      "_postman_id": "2ffc29e7-5d21-4200-964e-0b21aa7824cd",
+      "name": "Release Creature",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/creatures/{{creatureId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "creatures", "{{creatureId}}"]
+        }
+      }
+    },
+    {
+      "_postman_id": "7c6a1e2a-9b3f-4c0a-8e2d-1f6b3a9d5e77",
+      "name": "Get All Jobs",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/jobs",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "jobs"]
+        }
+      }
+    },
+    {
+      "_postman_id": "3f8d2c11-6a4e-4b9d-9c7a-2e5f8b1d0a44",
+      "name": "Get Job Recommendations",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/jobs/recommendations/{{creatureId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "jobs", "recommendations", "{{creatureId}}"]
+        }
+      }
+    },
+    {
+      "_postman_id": "6b2e9f14-3a7c-4d8b-a1e5-9c0f4b7d2e88",
+      "name": "Create Assignment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"creatureId\": \"{{creatureId}}\",\n  \"jobId\": \"PASTE_JOB_ID_HERE\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "assignments"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const data = pm.response.json();",
+              "    pm.environment.set('assignmentId', data.assignment._id);",
+              "    console.log('assignmentId saved');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "_postman_id": "9a4d7e22-5c1b-4f9a-b3d6-7e2a8c1f0d55",
+      "name": "Get Active Assignments",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "assignments"]
+        }
+      }
+    },
+    {
+      "_postman_id": "1e5c8a33-7d2f-4b6e-9a1c-3f7b5d9e2c44",
+      "name": "Complete Assignment",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "assignments", "{{assignmentId}}"]
+        }
+      }
+    },
+    {
+      "_postman_id": "8d3f6b11-4a9c-4e7d-b2f5-6c1a9d8e3f22",
+      "name": "Cancel Assignment",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "assignments", "{{assignmentId}}"]
+        }
+      }
+    }
+  ]
+}
