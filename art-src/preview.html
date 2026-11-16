@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonsterJob art preview</title>
+<!--
+  Open this file directly (double-click). No server, backend or database is
+  needed: the sheets are embedded as data URIs in preview-data.js, which
+  `node art-src/build.js` regenerates.
+-->
+<style>
+  body { margin: 0; padding: 24px; background: #1a1410; color: #f4ecd8; font: 14px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 18px; color: #e8a33d; margin: 0 0 4px; }
+  h2 { font-size: 15px; color: #e8a33d; margin: 28px 0 10px; }
+  p { margin: 0 0 8px; opacity: 0.8; }
+  .row { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; }
+  figure { margin: 0; text-align: center; }
+  figcaption { font-size: 12px; opacity: 0.7; margin-top: 6px; }
+  canvas { background: #2b2118; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .sheet { max-width: 100%; height: auto; }
+  label { margin-right: 16px; }
+  .error { color: #d17a6a; }
+</style>
+</head>
+<body>
+<h1>MonsterJob art preview</h1>
+<p>Each animation plays at the frame rate the game uses. 1x is the size on the game canvas before the browser scales it.</p>
+<p>
+  <label><input type="checkbox" id="paused"> Pause</label>
+  <label><input type="checkbox" id="light"> Light background</label>
+</p>
+<div id="creatures"></div>
+
+<script src="preview-data.js"></script>
+<script>
+(function () {
+  var root = document.getElementById('creatures');
+  var art = window.MONSTERJOB_ART;
+  if (!art) {
+    root.innerHTML = '<p class="error">preview-data.js is missing. Run: node art-src/build.js</p>';
+    return;
+  }
+
+  var players = [];
+  var W = art.frameWidth, H = art.frameHeight;
+
+  function makeCanvas(w, h) {
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.style.width = w + 'px'; c.style.height = h + 'px';
+    return c;
+  }
+
+  function addFigure(parent, canvas, caption) {
+    var fig = document.createElement('figure');
+    fig.appendChild(canvas);
+    var cap = document.createElement('figcaption');
+    cap.textContent = caption;
+    fig.appendChild(cap);
+    parent.appendChild(fig);
+  }
+
+  Object.keys(art.sheets).forEach(function (name) {
+    var img = new Image();
+    img.onload = function () {
+      var h2 = document.createElement('h2');
+      h2.textContent = name;
+      root.appendChild(h2);
+
+      var row = document.createElement('div');
+      row.className = 'row';
+      root.appendChild(row);
+
+      art.animations.forEach(function (anim) {
+        [1, 4].forEach(function (scale) {
+          var canvas = makeCanvas(W * scale, H * scale);
+          addFigure(row, canvas, anim.name + ' ' + scale + 'x (' + anim.fps + ' fps)');
+          players.push({ img: img, anim: anim, scale: scale, ctx: canvas.getContext('2d') });
+        });
+      });
+
+      var h3 = document.createElement('p');
+      h3.textContent = 'Full sheet at 4x - row 1 idle, row 2 work:';
+      h3.style.marginTop = '18px';
+      root.appendChild(h3);
+      var sheet = makeCanvas(img.width * 4, img.height * 4);
+      sheet.className = 'sheet';
+      var sctx = sheet.getContext('2d');
+      sctx.imageSmoothingEnabled = false;
+      sctx.drawImage(img, 0, 0, img.width * 4, img.height * 4);
+      root.appendChild(sheet);
+    };
+    img.src = art.sheets[name];
+  });
+
+  var paused = document.getElementById('paused');
+  var start = performance.now();
+  var frozenAt = 0;
+
+  function draw(now) {
+    var t = paused.checked ? frozenAt : (frozenAt = now - start);
+    players.forEach(function (p) {
+      var frame = Math.floor((t / 1000) * p.anim.fps) % art.columns;
+      p.ctx.imageSmoothingEnabled = false;
+      p.ctx.clearRect(0, 0, W * p.scale, H * p.scale);
+      p.ctx.drawImage(p.img, frame * W, p.anim.row * H, W, H, 0, 0, W * p.scale, H * p.scale);
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  document.getElementById('light').addEventListener('change', function (e) {
+    var bg = e.target.checked ? '#f4ecd8' : '#2b2118';
+    Array.prototype.forEach.call(document.querySelectorAll('canvas'), function (c) { c.style.background = bg; });
+  });
+})();
+</script>
+</body>
+</html>

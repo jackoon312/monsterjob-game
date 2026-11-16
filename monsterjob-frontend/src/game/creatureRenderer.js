@@ -3,6 +3,8 @@
 // creatures) - kept in one place so both scenes stay visually consistent
 // and don't duplicate ~150 lines of shape/animation code.
 
+import { createCreatureSprite } from './creatureSprites';
+
 export const TYPE_COLORS = {
   Fire: 0xe8643d,
   Water: 0x4d8fe8,
@@ -254,6 +256,11 @@ export function jobSummaryText(job) {
 // clickable hit area wired to showDetail, plus a nickname label and ambient
 // particles for Rare+ rarities. This is the single per-creature draw routine
 // shared by the Main Office and every category room.
+//
+// If the species has a code-drawn sprite sheet (see creatureSprites.js) that
+// is used instead of the polygon: the sheet's own idle/work animation
+// replaces the bob tween and the dimming, and rarity moves from the shape's
+// border to a coloured ring on the ground under the creature's feet.
 export function renderCreature(scene, creature, x, y, index, showDetail) {
   const species = creature.creatureSpeciesId;
   const type = species?.type;
@@ -262,8 +269,19 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
 
   const container = scene.add.container(x, y);
 
-  const { gfx, border } = drawCreatureShape(scene, type, rarity);
-  container.add(gfx);
+  const sprite = createCreatureSprite(scene, species, isWorking);
+  let gfx = null;
+  let border = RARITY_BORDER[rarity] || RARITY_BORDER.Common;
+
+  if (sprite) {
+    // Feet rest 3px above the bottom of the 32px frame, i.e. local y = +13.
+    const ring = scene.add.ellipse(0, 13, 26, 8, 0x1a1410, 0.45).setStrokeStyle(1, border.color, 0.9);
+    container.add(ring);
+    container.add(sprite);
+  } else {
+    ({ gfx, border } = drawCreatureShape(scene, type, rarity));
+    container.add(gfx);
+  }
 
   container
     .setSize(40, 40)
@@ -295,7 +313,7 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
 
   // Working creatures are shown dimmer plus a small spinning gold badge.
   if (isWorking) {
-    gfx.setAlpha(0.65);
+    if (gfx) gfx.setAlpha(0.65);
 
     const badge = scene.add.graphics({ x: 0, y: -34 });
     badge.fillStyle(0xe8a33d, 1);
@@ -329,15 +347,17 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
     });
   }
 
-  // Gentle idle bob
-  scene.tweens.add({
-    targets: container,
-    y: y - 6,
-    duration: 700 + index * 80,
-    yoyo: true,
-    repeat: -1,
-    ease: 'Sine.easeInOut'
-  });
+  // Gentle idle bob (sprites carry their own motion in the sheet instead)
+  if (!sprite) {
+    scene.tweens.add({
+      targets: container,
+      y: y - 6,
+      duration: 700 + index * 80,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+  }
 
   // Legendary pulse
   if (border.pulse) {

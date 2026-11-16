@@ -1,6 +1,6 @@
 # MonsterJob art plan
 
-Plan only — no code has been changed. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
+Phase 0 is done (Flamicore only); Phases 1–4 are still plan. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
 
 ## 1. What is a procedural placeholder today
 
@@ -25,7 +25,7 @@ Outside the canvas, the React panels use emoji (💰 🏆 🔒) as icons. The eq
 
 ## 2. Phased plan
 
-**Phase 0 — Pipeline, one creature end to end.** Add `art-src/` with a dependency-free Node PNG writer (`node:zlib`), the shared palette, and a contact-sheet preview. Draw one species, load it in a scene `preload()`, and keep the current polygon as a fallback when a texture is missing. This proves paths, scaling and animation before any volume work.
+**Phase 0 — Pipeline, Flamicore only. Done.** `node art-src/build.js` (no dependencies) reads each module in `art-src/creatures/`, validates it against the spec below, and writes the sheet to the path seeded in `seedSpecies.js`, a 4x contact sheet to `art-src/contact/`, and a manifest the game loads from. `art-src/preview.html` opens by double-click and plays the sheets at 1x and 4x with no server. In the game, a species with a sheet in the manifest is drawn as an animated sprite (idle row when idle, work row when on a job); every other species, and any sheet that fails to load, still gets the old polygon.
 
 **Phase 1 — Creatures (24 sheets).** One file per species at the seeded path, e.g. `/assets/creatures/flamicore.png`. Work Common → Legendary so the most-seen creatures land first. Replace the rarity border with a rarity-coloured ground ring so that information is not lost; keep the particles.
 
@@ -47,18 +47,28 @@ Each phase ends with `npm run build`, a manual pass over jobs/equipment/office/a
 
 **Palette**
 - One master palette of at most 32 colours, built outward from the colours already in the game (`#2b2118`, `#3d2f22`, `#f4ecd8`, `#e8a33d`, and the eight type colours).
-- At most 8 colours per creature, including the outline. Each type gets a 3-step ramp (shadow, base, highlight) with hue shifted, not just darkened.
+- At most **10 colours per creature including the outline; 12 for Rare and above**. `build.js` fails the build if a sheet goes over. Each type gets a 3-step ramp (shadow, base, highlight) with hue shifted, not just darkened.
 - Outline is the warm dark `#1a1410`, never pure black. Light comes from the top-left. Alpha is 0 or 255 only — no anti-aliasing, gradients or soft shadows.
 - Rarity shows through added detail and one accent colour, not through size.
 
+**Cute style (applies to every creature)**
+- Big head: about 40–50% of the sprite height, ears or crest included.
+- Large eyes (about 3×4px) with one white highlight pixel in the upper-left.
+- Small rounded body, short stubby limbs, soft rounded silhouette — no long necks, thin legs or sharp spikes.
+- Friendly expression: small smile, blush on the cheeks; closed-happy eyes are allowed in the work row.
+- Clear dark outline around every part; 2–3 tones per colour, no more.
+- Silhouette test: filled in one flat colour at 1x, the creature must still be recognisable by its one signature feature (Flamicore: fox ears plus flame tail).
+
 **Generator rules**
 - Deterministic: same script, same bytes (no `Math.random` without a fixed seed), so diffs are reviewable.
-- Each species is a base pixel grid plus named parts (eyes, limbs, tail); frames are derived by small part offsets, which keeps 288 frames manageable.
+- Each species is a set of named parts drawn as text grids (head, body, tail, eye states); frames are built by stamping parts at whole-pixel offsets, and the 1px outline is added automatically. This keeps 288 frames manageable.
+- `build.js` rejects a sheet that is not 12 frames, spills outside the frame or below the baseline, or breaks the colour limit.
 
 ## 4. Risks
 
 - **Originality.** Names like Phoenixreborn or Infernodrake pull toward familiar monster designs. Each batch needs a contact sheet you review for resemblance before it is wired in.
-- **Quality ceiling of code-drawn art.** Hand-placed pixel grids are slow and can look stiff. Phase 0 is the checkpoint: if one creature does not look good, change the approach before drawing 24.
+- **Quality ceiling of code-drawn art.** Hand-placed pixel grids are slow and can look stiff. Flamicore took four drafts; expect the same per species.
+- **Sprites look small in the game.** A 32px sprite at 1x is visibly smaller than the ~40px polygons beside it, and the page layout currently shows the 480×320 canvas at well under its native size.
 - **Paths are stored in the database.** `spriteAssetPath` is copied into MongoDB by the seed script, so any rename needs a reseed of every environment, including a deployed one.
 - **Scene restarts.** `PhaserGame.jsx` restarts the active scene on every data change. Textures and animations must be loaded and registered once, guarded against duplicate keys, or this will flicker or throw.
 - **Uneven pixels.** The canvas uses `Scale.FIT`, which scales by non-integer factors; real pixel art will show this far more than flat shapes do. The 7–9px `monospace` labels will also clash with the sprites. Both need a later code decision.

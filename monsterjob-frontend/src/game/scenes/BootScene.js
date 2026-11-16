@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { preloadCreatureSprites } from '../creatureSprites';
 import { buildStar, ensureSparkTexture, createDetailPanel, layoutCreatures } from '../creatureRenderer';
 
 // Main Office (Lobby) - shows idle creatures only. Working creatures live in
@@ -135,6 +136,10 @@ function drawTrophyShelf(scene, width, unlocked, total, showDetail) {
 export default class BootScene extends Phaser.Scene {
   constructor() {
     super('BootScene');
+  }
+
+  preload() {
+    preloadCreatureSprites(this);
   }
 
   create() {

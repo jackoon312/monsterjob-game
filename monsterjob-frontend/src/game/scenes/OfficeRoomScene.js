@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { preloadCreatureSprites } from '../creatureSprites';
 import { ensureSparkTexture, createDetailPanel, layoutCreatures, layoutJobStations } from '../creatureRenderer';
 
 // One reusable scene for all 5 job-category rooms (Labor, Service, Creative,
@@ -22,6 +23,10 @@ export default class OfficeRoomScene extends Phaser.Scene {
 
   init(data) {
     this.category = data?.category || 'Labor';
+  }
+
+  preload() {
+    preloadCreatureSprites(this);
   }
 
   create() {

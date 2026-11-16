@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { preloadCreatureSprites } from '../creatureSprites';
 
 // Second real scene from the design doc's 8-scene list (Boot/Menu/Game/
 // Office/Job/CreatureDetail/Equipment/Achievements). Simple title screen
@@ -8,6 +9,10 @@ import Phaser from 'phaser';
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super('MenuScene');
+  }
+
+  preload() {
+    preloadCreatureSprites(this);
   }
 
   create() {
