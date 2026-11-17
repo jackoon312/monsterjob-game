@@ -60,6 +60,13 @@ class Frame {
     return this;
   }
 
+  // Same shape filled with one flat colour - used for the silhouette test.
+  silhouette(name = 'cream') {
+    const f = new Frame(this.size);
+    f.px = this.px.map((p) => (p ? name : null));
+    return f;
+  }
+
   colours() {
     return new Set(this.px.filter(Boolean));
   }

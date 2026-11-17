@@ -6,8 +6,11 @@
 //   - the sprite sheet to monsterjob-frontend/public<spriteAssetPath>, where
 //     spriteAssetPath is read from monsterjob-backend/seed/seedSpecies.js so
 //     the file can never drift from what the database points at
-//   - a 4x contact sheet to art-src/contact/<name>-4x.png for review
+//   - a 4x contact sheet to art-src/contact/<name>-4x.png for review: idle
+//     row, work row, then the idle row again as a flat one-colour silhouette
 // and then:
+//   - art-src/contact/lineup-4x.png: every creature side by side, in colour
+//     and as a silhouette, to check they cannot be mistaken for each other
 //   - art-src/preview-data.js (sheets as data URIs, used by preview.html)
 //   - monsterjob-frontend/src/game/creatureSpriteManifest.json (what the
 //     game is allowed to load)
@@ -70,6 +73,7 @@ function main() {
   const seedSpecies = readSeedSpecies();
   const previewData = {};
   const sheets = [];
+  const lineup = [];
   const files = fs.readdirSync(path.join(__dirname, 'creatures')).filter((f) => f.endsWith('.js')).sort();
 
   for (const file of files) {
@@ -86,7 +90,9 @@ function main() {
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, sheetPng);
 
-    const contact = compose(all, COLUMNS, { scale: 4, background: '#2b2118', gap: 8 });
+    const silhouettes = creature.frames.idle.map((frame) => frame.silhouette());
+    const contact = compose([...all, ...silhouettes], COLUMNS, { scale: 4, background: '#2b2118', gap: 8 });
+    lineup.push(creature.frames.idle[0]);
     const slug = path.basename(seed.spriteAssetPath, '.png');
     fs.writeFileSync(path.join(__dirname, 'contact', `${slug}-4x.png`), encodePNG(contact.width, contact.height, contact.rgba));
 
@@ -94,6 +100,16 @@ function main() {
     sheets.push(seed.spriteAssetPath);
     console.log(`${creature.species}: ${sheet.width}x${sheet.height}, ${colourCount}/${limit} colours -> ${path.relative(ROOT, outPath)}`);
   }
+
+  const lineupSheet = compose([...lineup, ...lineup.map((frame) => frame.silhouette())], lineup.length, {
+    scale: 4,
+    background: '#2b2118',
+    gap: 8
+  });
+  fs.writeFileSync(
+    path.join(__dirname, 'contact', 'lineup-4x.png'),
+    encodePNG(lineupSheet.width, lineupSheet.height, lineupSheet.rgba)
+  );
 
   const spec = { frameWidth: FRAME, frameHeight: FRAME, columns: COLUMNS, animations: ANIMATIONS };
   fs.writeFileSync(

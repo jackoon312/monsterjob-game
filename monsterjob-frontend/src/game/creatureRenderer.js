@@ -5,6 +5,25 @@
 
 import { createCreatureSprite } from './creatureSprites';
 
+// Sprites are drawn at 32x32 and shown at 2x, so one art pixel is always a
+// 2x2 block of canvas pixels. Everything attached to a sprite (ground ring,
+// gear pips, working badge, name label) is positioned from these numbers so
+// nothing overlaps: badge above the tallest hop, pips between feet and label.
+const SPRITE_SCALE = 2;
+const SPRITE_FEET_Y = 26; // feet baseline, relative to the sprite's centre
+const SPRITE_PIPS_Y = 34;
+const SPRITE_LABEL_Y = 38; // top of the name label
+const SPRITE_BADGE_Y = -38;
+const SHAPE_BADGE_Y = -32;
+const BADGE_SCALE = 0.6; // small enough to clear the row above
+
+// Rows of creatures are this far apart - enough for a 2x sprite, its label
+// below and the next row's working badge above.
+const ROW_SPACING = 92;
+const MAX_LABEL_CHARS = 12; // 70px column / ~5.4px per character
+
+const shortName = (name) => (name.length > MAX_LABEL_CHARS ? name.slice(0, MAX_LABEL_CHARS - 1) + '…' : name);
+
 export const TYPE_COLORS = {
   Fire: 0xe8643d,
   Water: 0x4d8fe8,
@@ -258,9 +277,11 @@ export function jobSummaryText(job) {
 // shared by the Main Office and every category room.
 //
 // If the species has a code-drawn sprite sheet (see creatureSprites.js) that
-// is used instead of the polygon: the sheet's own idle/work animation
-// replaces the bob tween and the dimming, and rarity moves from the shape's
-// border to a coloured ring on the ground under the creature's feet.
+// is used instead of the polygon, at 2x: the sheet's own idle/work animation
+// replaces the bob tween, the dimming and the Legendary pulse (which would
+// scale pixels unevenly), rarity moves from the shape's border to a coloured
+// ring on the ground, gear dots become a row of pips under the feet, and the
+// label is a single line (gold while working) so rows can sit closer.
 export function renderCreature(scene, creature, x, y, index, showDetail) {
   const species = creature.creatureSpeciesId;
   const type = species?.type;
@@ -274,8 +295,10 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
   let border = RARITY_BORDER[rarity] || RARITY_BORDER.Common;
 
   if (sprite) {
-    // Feet rest 3px above the bottom of the 32px frame, i.e. local y = +13.
-    const ring = scene.add.ellipse(0, 13, 26, 8, 0x1a1410, 0.45).setStrokeStyle(1, border.color, 0.9);
+    sprite.setScale(SPRITE_SCALE);
+    const ring = scene.add
+      .ellipse(0, SPRITE_FEET_Y - 1, 46, 10, 0x1a1410, 0.45)
+      .setStrokeStyle(2, border.color, 1);
     container.add(ring);
     container.add(sprite);
   } else {
@@ -284,7 +307,7 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
   }
 
   container
-    .setSize(40, 40)
+    .setSize(sprite ? 56 : 40, sprite ? 56 : 40)
     .setInteractive({ useHandCursor: true })
     .on('pointerdown', () => {
       showDetail(creatureSummaryText(creature));
@@ -305,9 +328,13 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
     { key: 'body', dx: 14, dy: -14, color: 0x4d8fe8 },
     { key: 'accessory', dx: 0, dy: 18, color: 0xb06be8 }
   ];
-  slotDots.forEach(({ key, dx, dy, color }) => {
+  slotDots.forEach(({ key, dx, dy, color }, slotIndex) => {
     if (!equipment[key]) return;
-    const dot = scene.add.circle(dx, dy, 4, color).setStrokeStyle(1, 0x1a1410);
+    // Around a sprite the dots would sit on its face, so they become a row
+    // of three fixed-position pips under its feet instead (same colours).
+    const dot = sprite
+      ? scene.add.rectangle((slotIndex - 1) * 8, SPRITE_PIPS_Y, 5, 5, color).setStrokeStyle(1, 0x1a1410)
+      : scene.add.circle(dx, dy, 4, color).setStrokeStyle(1, 0x1a1410);
     container.add(dot);
   });
 
@@ -315,7 +342,8 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
   if (isWorking) {
     if (gfx) gfx.setAlpha(0.65);
 
-    const badge = scene.add.graphics({ x: 0, y: -34 });
+    const badge = scene.add.graphics({ x: 0, y: sprite ? SPRITE_BADGE_Y : SHAPE_BADGE_Y });
+    badge.setScale(BADGE_SCALE);
     badge.fillStyle(0xe8a33d, 1);
     badge.lineStyle(1, 0x2b2118, 1);
     const gearPoints = [
@@ -360,7 +388,7 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
   }
 
   // Legendary pulse
-  if (border.pulse) {
+  if (border.pulse && !sprite) {
     scene.tweens.add({
       targets: container,
       scale: 1.12,
@@ -384,14 +412,18 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
     });
   }
 
-  scene.add
-    .text(x, y + 30, (creature.nickname || 'Unnamed') + (isWorking ? '\n(working)' : ''), {
-      fontFamily: 'monospace',
-      fontSize: '9px',
-      color: isWorking ? '#e8a33d' : '#f4ecd8',
-      align: 'center'
-    })
-    .setOrigin(0.5);
+  const name = shortName(creature.nickname || 'Unnamed');
+  const labelStyle = {
+    fontFamily: 'monospace',
+    fontSize: '9px',
+    color: isWorking ? '#e8a33d' : '#f4ecd8',
+    align: 'center'
+  };
+  if (sprite) {
+    scene.add.text(x, y + SPRITE_LABEL_Y, name, labelStyle).setOrigin(0.5, 0);
+  } else {
+    scene.add.text(x, y + 30, name + (isWorking ? '\n(working)' : ''), labelStyle).setOrigin(0.5);
+  }
 }
 
 // Renders a row of small clickable "job station" icons - one per job in a
@@ -426,7 +458,7 @@ export function layoutJobStations(scene, jobs, width, wallHeight, showDetail, ac
     scene.add.text(x, y, '💼', { fontSize: '10px' }).setOrigin(0.5);
 
     scene.add
-      .text(x, y + 16, job.name.length > 10 ? job.name.slice(0, 9) + '…' : job.name, {
+      .text(x, y + 14, job.name.length > 10 ? job.name.slice(0, 9) + '…' : job.name, {
         fontFamily: 'monospace',
         fontSize: '7px',
         color: '#f4ecd8'
@@ -451,7 +483,7 @@ export function layoutCreatures(scene, creatures, width, height, showDetail, opt
     const col = index % perRow;
     const row = Math.floor(index / perRow);
     const x = startX + col * spacing;
-    const y = rowY - row * 70;
+    const y = rowY - row * ROW_SPACING;
     renderCreature(scene, creature, x, y, index, showDetail);
   });
 }

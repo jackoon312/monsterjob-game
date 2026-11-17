@@ -71,7 +71,7 @@ export default class OfficeRoomScene extends Phaser.Scene {
       return;
     }
 
-    layoutCreatures(this, creatures, width, height, showDetail, { rowY: height - 60 });
+    layoutCreatures(this, creatures, width, height, showDetail, { rowY: height - 54 });
   }
 
   drawRoomBackground(width, height, theme) {

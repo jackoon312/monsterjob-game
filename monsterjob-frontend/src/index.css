@@ -195,8 +195,10 @@ body {
   padding: 20px;
 }
 
+/* The game gets a full-width row of its own so the canvas has room for the
+   largest whole-number zoom; the side panels wrap underneath. */
 .game-canvas-panel {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 320px;
   background: var(--color-panel);
   border: 3px solid var(--color-border);
@@ -370,4 +372,17 @@ body {
   font-size: 13px;
   color: var(--color-gold);
   margin-top: 4px;
+}
+
+/* The canvas is sized by Phaser to a whole-number zoom (see game/config.js).
+   Only on screens narrower than the game's native 480px does it shrink to
+   fit, where even pixels are not possible anyway. */
+#phaser-container {
+  line-height: 0;
+  max-width: 100%;
+}
+
+#phaser-container canvas {
+  max-width: 100%;
+  height: auto !important;
 }

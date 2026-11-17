@@ -1,17 +1,17 @@
 # MonsterJob art plan
 
-Phase 0 is done (Flamicore only); Phases 1–4 are still plan. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
+Phase 0 is done. Phase 1 is in progress: the six Commons are drawn (Flamicore, Aquorb, Terramole, Voltix, Sylphant, Stonehide); 18 species remain. Phases 2–4 are still plan. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
 
-## 1. What is a procedural placeholder today
+## 1. What is still a procedural placeholder
 
-There are no image files anywhere: `monsterjob-frontend/public/` does not exist, no scene has a `preload()`, and the frontend never reads `spriteAssetPath`. Everything on the 480×320 canvas is Phaser `Graphics`/`rectangle`/`text`.
+Six species now have real sprite sheets in `monsterjob-frontend/public/assets/creatures/`, loaded by each scene's `preload()` and looked up by `spriteAssetPath`. Everything else on the 480×320 canvas is still Phaser `Graphics`/`rectangle`/`text`.
 
 | Visual | Where | Currently |
 |---|---|---|
-| Creatures (24 species) | `creatureRenderer.js` | One flat polygon per **type** (8 shapes), so species of the same type look identical; rarity is only a border colour/width |
-| Creature animation | `renderCreature` | Tweens only: bob, click pop, Legendary pulse |
-| Working state | `renderCreature` | 65% alpha plus a spinning octagon badge |
-| Equipped gear | `renderCreature` | Three coloured dots (head/body/accessory) |
+| Creatures (18 of 24 species) | `creatureRenderer.js` | One flat polygon per **type**, so species of the same type look identical; rarity is only a border colour/width. The six Commons use sprites instead |
+| Creature animation (polygons only) | `renderCreature` | Tweens only: bob, click pop, Legendary pulse |
+| Working badge | `renderCreature` | Spinning octagon, used for sprites and polygons alike |
+| Equipped gear | `renderCreature` | Three coloured dots around a polygon, or three square pips under a sprite |
 | Rare+ particles | `ensureSparkTexture` | 8×8 white circle |
 | Main Office | `BootScene.js` | Striped rectangles for floor and wall; window, desks, plant, rug, trophy star as shapes, some gated by tier 5/10/15/20 |
 | Category doors (5) | `BootScene.js` | Coloured rectangles with text |
@@ -27,7 +27,7 @@ Outside the canvas, the React panels use emoji (💰 🏆 🔒) as icons. The eq
 
 **Phase 0 — Pipeline, Flamicore only. Done.** `node art-src/build.js` (no dependencies) reads each module in `art-src/creatures/`, validates it against the spec below, and writes the sheet to the path seeded in `seedSpecies.js`, a 4x contact sheet to `art-src/contact/`, and a manifest the game loads from. `art-src/preview.html` opens by double-click and plays the sheets at 1x and 4x with no server. In the game, a species with a sheet in the manifest is drawn as an animated sprite (idle row when idle, work row when on a job); every other species, and any sheet that fails to load, still gets the old polygon.
 
-**Phase 1 — Creatures (24 sheets).** One file per species at the seeded path, e.g. `/assets/creatures/flamicore.png`. Work Common → Legendary so the most-seen creatures land first. Replace the rarity border with a rarity-coloured ground ring so that information is not lost; keep the particles.
+**Phase 1 — Creatures (24 sheets). In progress: 6 of 24.** One file per species at the seeded path, e.g. `/assets/creatures/flamicore.png`, drawn in rarity batches with a review after each. Commons are done; next are the five Uncommons. Rarity is shown by a coloured ring on the ground under a sprite; particles are kept.
 
 **Phase 2 — Rooms.** Main Office floor, wall, window, desk, plant and the tier 5/10/15/20 additions; then the five category rooms with one or two signature props each (anvil, counter, easel, workbench, training dummy). Doors become real door sprites with a category sign.
 
@@ -40,7 +40,9 @@ Each phase ends with `npm run build`, a manual pass over jobs/equipment/office/a
 ## 3. Recommended sprite spec
 
 **Frames**
-- Creature frame: **32×32**, transparent background, feet on a shared baseline 2px from the bottom, centred. This matches the current ~40px footprint and 70px grid spacing, so layout does not move.
+- Creature frame: **32×32**, transparent background, feet on a shared baseline 2px from the bottom, centred.
+- **Shown at 2x in the game** (64px), so one art pixel is always a 2×2 block. The canvas itself is only ever shown at a whole-number zoom (1x, 2x, 3x…), never stretched to fit. Later room and prop art should be drawn for the same 2x so pixel sizes do not mix.
+- Around a sprite: working badge above the tallest hop, gear pips between feet and label, one-line name label below. Rows are 92px apart and columns 70px.
 - Creature sheet: **192×64**, 6 columns × 2 rows. Row 0 = idle (6 frames, 6 fps, loop). Row 1 = work (6 frames, 8 fps, loop). Six columns matches the `animationFrames: 6` already seeded for every species.
 - Tiles and props on a **16×16** grid (props may span several cells). Icons 16×16. Backgrounds composed to 480×320.
 - No rotation or sub-pixel offsets inside frames; motion is redrawn pixels, 1–2px squash and bounce.
@@ -61,17 +63,20 @@ Each phase ends with `npm run build`, a manual pass over jobs/equipment/office/a
 
 **Generator rules**
 - Deterministic: same script, same bytes (no `Math.random` without a fixed seed), so diffs are reviewable.
-- Each species is a set of named parts drawn as text grids (head, body, tail, eye states); frames are built by stamping parts at whole-pixel offsets, and the 1px outline is added automatically. This keeps 288 frames manageable.
+- Each species is a set of named parts drawn as text grids (head, body, tail…); frames are built by stamping parts at whole-pixel offsets, and the 1px outline is added automatically.
+- Eyes (open, blink, happy), the smile, the basic body and the idle/work timing live in `art-src/lib/rig.js` and are shared by every creature, so they all blink, breathe and hop alike. Work is one generic hop for all species.
+- Every contact sheet has a third row of flat one-colour silhouettes, and `art-src/contact/lineup-4x.png` shows all creatures side by side in colour and as silhouettes.
 - `build.js` rejects a sheet that is not 12 frames, spills outside the frame or below the baseline, or breaks the colour limit.
 
 ## 4. Risks
 
 - **Originality.** Names like Phoenixreborn or Infernodrake pull toward familiar monster designs. Each batch needs a contact sheet you review for resemblance before it is wired in.
 - **Quality ceiling of code-drawn art.** Hand-placed pixel grids are slow and can look stiff. Flamicore took four drafts; expect the same per species.
-- **Sprites look small in the game.** A 32px sprite at 1x is visibly smaller than the ~40px polygons beside it, and the page layout currently shows the 480×320 canvas at well under its native size.
+- **Room on the canvas.** At 2x, a row holds 6 creatures and the Main Office fits 2 rows (12 idle creatures) before a third row runs into the doors; office capacity goes up to 50. The polygons had the same limit, but it needs a real answer (paging or a scrolling floor) before late-game.
+- **Palette budget.** The master palette is at 27 of 32 colours after six creatures, with Metal, Psychic and Dark still to come. Later species must reuse existing ramps, or the cap needs raising.
 - **Paths are stored in the database.** `spriteAssetPath` is copied into MongoDB by the seed script, so any rename needs a reseed of every environment, including a deployed one.
 - **Scene restarts.** `PhaserGame.jsx` restarts the active scene on every data change. Textures and animations must be loaded and registered once, guarded against duplicate keys, or this will flicker or throw.
-- **Uneven pixels.** The canvas uses `Scale.FIT`, which scales by non-integer factors; real pixel art will show this far more than flat shapes do. The 7–9px `monospace` labels will also clash with the sprites. Both need a later code decision.
+- **Text.** The canvas now uses whole-number zoom, but the 7–9px `monospace` labels are not a pixel font and clash with the sprites. On screens narrower than 480px the canvas still shrinks to fit.
 - **Lost information.** Type shape, rarity border, gear dots and the dimmed working state all carry gameplay meaning today; each needs an explicit replacement.
 - **Build output folder.** Vite writes bundled JS/CSS to `dist/assets/`, the same folder `public/assets/` is copied into. Keeping art in subfolders (`creatures/`, `rooms/`, `ui/`) avoids name clashes.
 - **Verification.** There are no tests, and the game needs a live MongoDB to show creatures, so in-game checks are manual. A standalone preview page in `art-src/` covers the art itself.

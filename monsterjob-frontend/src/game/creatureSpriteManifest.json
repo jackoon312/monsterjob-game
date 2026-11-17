@@ -15,6 +15,11 @@
     }
   ],
   "sheets": [
-    "/assets/creatures/flamicore.png"
+    "/assets/creatures/aquorb.png",
+    "/assets/creatures/flamicore.png",
+    "/assets/creatures/stonehide.png",
+    "/assets/creatures/sylphant.png",
+    "/assets/creatures/terramole.png",
+    "/assets/creatures/voltix.png"
   ]
 }

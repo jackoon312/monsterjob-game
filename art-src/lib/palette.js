@@ -14,7 +14,34 @@ const MASTER = {
   fire: '#e8643d',
   fireLight: '#f79a52',
   flame: '#fbd35a',
-  flameCore: '#fff3b8'
+  flameCore: '#fff3b8',
+
+  // Water ramp
+  waterDark: '#2f5fb0',
+  water: '#4d8fe8',
+  waterLight: '#9fd0f7',
+
+  // Earth / fur ramp
+  brownDark: '#5a3f2c',
+  brown: '#8f6a48',
+  brownLight: '#c29a70',
+
+  // Stone ramp (also soft grey skin)
+  stoneDark: '#5e5a60',
+  stone: '#8f8a8c',
+  stoneLight: '#c4bdb6',
+
+  // Electric ramp (flameCore doubles as its highlight)
+  voltDark: '#c98f2a',
+  volt: '#f2cf3f',
+  spark: '#7fe3e8',
+
+  // Nature ramp
+  leafDark: '#3f6b45',
+  leaf: '#6b8f5a',
+  leafLight: '#a9c96e',
+  mint: '#c3e3c4',
+  mintShade: '#8fbf9e'
 };
 
 const hexToRGBA = (hex) => [

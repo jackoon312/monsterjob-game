@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { createGameConfig } from './config';
+import { createGameConfig, wholeNumberZoom } from './config';
 
 // This is the trickiest part of a Phaser + React integration: Phaser wants to
 // own a persistent canvas and its own game loop, while React wants to
@@ -21,7 +21,27 @@ const PhaserGame = ({ officeData, officeTier }) => {
     const containerId = 'phaser-container';
     gameRef.current = new Phaser.Game(createGameConfig(containerId));
 
+    // Keep the canvas at a whole-number zoom of its native 480x320 (see
+    // config.js). Width comes from the panel the canvas sits in; height is
+    // capped so the whole canvas stays visible in the window.
+    const panel = containerRef.current?.parentElement;
+    const applyZoom = () => {
+      const game = gameRef.current;
+      if (!game || !panel) return;
+      const style = window.getComputedStyle(panel);
+      const availableWidth = panel.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const availableHeight = window.innerHeight - 140;
+      const zoom = wholeNumberZoom(availableWidth, availableHeight);
+      if (game.scale.zoom !== zoom) game.scale.setZoom(zoom);
+    };
+    applyZoom();
+    const observer = panel ? new ResizeObserver(applyZoom) : null;
+    observer?.observe(panel);
+    window.addEventListener('resize', applyZoom);
+
     return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', applyZoom);
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
