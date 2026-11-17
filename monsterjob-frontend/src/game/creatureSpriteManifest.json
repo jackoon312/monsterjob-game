@@ -16,10 +16,15 @@
   ],
   "sheets": [
     "/assets/creatures/aquorb.png",
+    "/assets/creatures/barkbeast.png",
     "/assets/creatures/flamicore.png",
+    "/assets/creatures/infernodrake.png",
+    "/assets/creatures/irongolem.png",
     "/assets/creatures/stonehide.png",
     "/assets/creatures/sylphant.png",
     "/assets/creatures/terramole.png",
+    "/assets/creatures/thunderwing.png",
+    "/assets/creatures/tidecoral.png",
     "/assets/creatures/voltix.png"
   ]
 }

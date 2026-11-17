@@ -41,7 +41,11 @@ const MASTER = {
   leaf: '#6b8f5a',
   leafLight: '#a9c96e',
   mint: '#c3e3c4',
-  mintShade: '#8fbf9e'
+  mintShade: '#8fbf9e',
+
+  // Metal
+  steelDark: '#4b5a70',
+  steel: '#8194ab'
 };
 
 const hexToRGBA = (hex) => [

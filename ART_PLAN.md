@@ -1,14 +1,14 @@
 # MonsterJob art plan
 
-Phase 0 is done. Phase 1 is in progress: the six Commons are drawn (Flamicore, Aquorb, Terramole, Voltix, Sylphant, Stonehide); 18 species remain. Phases 2–4 are still plan. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
+Phase 0 is done. Phase 1 is in progress: the six Commons and five Uncommons are drawn (11 of 24); the Rares, Epics and Legendaries remain. Phases 2–4 are still plan. Follows the rules in `CLAUDE.md`: original, code-drawn, cute/chibi top-down pixel art; generators in `art-src/`; output in `monsterjob-frontend/public/assets/`; paths match `spriteAssetPath` in `seed/seedSpecies.js`.
 
 ## 1. What is still a procedural placeholder
 
-Six species now have real sprite sheets in `monsterjob-frontend/public/assets/creatures/`, loaded by each scene's `preload()` and looked up by `spriteAssetPath`. Everything else on the 480×320 canvas is still Phaser `Graphics`/`rectangle`/`text`.
+Eleven species now have real sprite sheets in `monsterjob-frontend/public/assets/creatures/`, loaded by each scene's `preload()` and looked up by `spriteAssetPath`. Everything else on the 480×320 canvas is still Phaser `Graphics`/`rectangle`/`text`.
 
 | Visual | Where | Currently |
 |---|---|---|
-| Creatures (18 of 24 species) | `creatureRenderer.js` | One flat polygon per **type**, so species of the same type look identical; rarity is only a border colour/width. The six Commons use sprites instead |
+| Creatures (13 of 24 species) | `creatureRenderer.js` | One flat polygon per **type**, so species of the same type look identical; rarity is only a border colour/width. The Commons and Uncommons use sprites instead |
 | Creature animation (polygons only) | `renderCreature` | Tweens only: bob, click pop, Legendary pulse |
 | Working badge | `renderCreature` | Spinning octagon, used for sprites and polygons alike |
 | Equipped gear | `renderCreature` | Three coloured dots around a polygon, or three square pips under a sprite |
@@ -27,7 +27,7 @@ Outside the canvas, the React panels use emoji (💰 🏆 🔒) as icons. The eq
 
 **Phase 0 — Pipeline, Flamicore only. Done.** `node art-src/build.js` (no dependencies) reads each module in `art-src/creatures/`, validates it against the spec below, and writes the sheet to the path seeded in `seedSpecies.js`, a 4x contact sheet to `art-src/contact/`, and a manifest the game loads from. `art-src/preview.html` opens by double-click and plays the sheets at 1x and 4x with no server. In the game, a species with a sheet in the manifest is drawn as an animated sprite (idle row when idle, work row when on a job); every other species, and any sheet that fails to load, still gets the old polygon.
 
-**Phase 1 — Creatures (24 sheets). In progress: 6 of 24.** One file per species at the seeded path, e.g. `/assets/creatures/flamicore.png`, drawn in rarity batches with a review after each. Commons are done; next are the five Uncommons. Rarity is shown by a coloured ring on the ground under a sprite; particles are kept.
+**Phase 1 — Creatures (24 sheets). In progress: 11 of 24.** One file per species at the seeded path, e.g. `/assets/creatures/flamicore.png`, drawn in rarity batches with a review after each. Commons and Uncommons are done; next are the five Rares. In the game, rarity is shown by the ring on the ground under a sprite: Common is a dark shadow with a grey rim, and each higher rarity fills the ring with its own colour (green, blue, purple, gold). Legendary adds a pulsing outer ring; Rare and above keep their particles.
 
 **Phase 2 — Rooms.** Main Office floor, wall, window, desk, plant and the tier 5/10/15/20 additions; then the five category rooms with one or two signature props each (anvil, counter, easel, workbench, training dummy). Doors become real door sprites with a category sign.
 
@@ -49,7 +49,7 @@ Each phase ends with `npm run build`, a manual pass over jobs/equipment/office/a
 
 **Palette**
 - One master palette of at most 32 colours, built outward from the colours already in the game (`#2b2118`, `#3d2f22`, `#f4ecd8`, `#e8a33d`, and the eight type colours).
-- At most **10 colours per creature including the outline; 12 for Rare and above**. `build.js` fails the build if a sheet goes over. Each type gets a 3-step ramp (shadow, base, highlight) with hue shifted, not just darkened.
+- At most **10 colours per creature including the outline; 12 for Rare and above**. Uncommons get a little more detail than Commons plus one small glowing accent (an ember, lit antler tips, a sap drop, wing sparks, a core light). `build.js` fails the build if a sheet goes over. Each type gets a 3-step ramp (shadow, base, highlight) with hue shifted, not just darkened.
 - Outline is the warm dark `#1a1410`, never pure black. Light comes from the top-left. Alpha is 0 or 255 only — no anti-aliasing, gradients or soft shadows.
 - Rarity shows through added detail and one accent colour, not through size.
 
@@ -73,7 +73,7 @@ Each phase ends with `npm run build`, a manual pass over jobs/equipment/office/a
 - **Originality.** Names like Phoenixreborn or Infernodrake pull toward familiar monster designs. Each batch needs a contact sheet you review for resemblance before it is wired in.
 - **Quality ceiling of code-drawn art.** Hand-placed pixel grids are slow and can look stiff. Flamicore took four drafts; expect the same per species.
 - **Room on the canvas.** At 2x, a row holds 6 creatures and the Main Office fits 2 rows (12 idle creatures) before a third row runs into the doors; office capacity goes up to 50. The polygons had the same limit, but it needs a real answer (paging or a scrolling floor) before late-game.
-- **Palette budget.** The master palette is at 27 of 32 colours after six creatures, with Metal, Psychic and Dark still to come. Later species must reuse existing ramps, or the cap needs raising.
+- **Palette budget.** The master palette is at 29 of 32 colours after eleven creatures, with Psychic and Dark still to come. Later species must reuse existing ramps, or the cap needs raising.
 - **Paths are stored in the database.** `spriteAssetPath` is copied into MongoDB by the seed script, so any rename needs a reseed of every environment, including a deployed one.
 - **Scene restarts.** `PhaserGame.jsx` restarts the active scene on every data change. Textures and animations must be loaded and registered once, guarded against duplicate keys, or this will flicker or throw.
 - **Text.** The canvas now uses whole-number zoom, but the 7–9px `monospace` labels are not a pixel font and clash with the sprites. On screens narrower than 480px the canvas still shrinks to fit.

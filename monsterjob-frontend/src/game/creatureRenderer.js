@@ -296,10 +296,21 @@ export function renderCreature(scene, creature, x, y, index, showDetail) {
 
   if (sprite) {
     sprite.setScale(SPRITE_SCALE);
+    // Rarity ring on the ground under the feet (replaces the polygon's
+    // rarity border). Common is a plain dark shadow with a grey rim; every
+    // rarity above it fills the ring with its own colour, so the tier reads
+    // at a glance. Legendary adds a second, slowly pulsing outer ring - it
+    // fades rather than scales, so the pixel art itself never stretches.
+    const isCommon = !rarity || rarity === 'Common';
     const ring = scene.add
-      .ellipse(0, SPRITE_FEET_Y - 1, 46, 10, 0x1a1410, 0.45)
+      .ellipse(0, SPRITE_FEET_Y - 1, 46, 10, isCommon ? 0x1a1410 : border.color, isCommon ? 0.45 : 0.55)
       .setStrokeStyle(2, border.color, 1);
     container.add(ring);
+    if (border.pulse) {
+      const halo = scene.add.ellipse(0, SPRITE_FEET_Y - 1, 56, 14).setStrokeStyle(2, border.color, 1);
+      container.addAt(halo, 0);
+      scene.tweens.add({ targets: halo, alpha: 0.15, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
     container.add(sprite);
   } else {
     ({ gfx, border } = drawCreatureShape(scene, type, rarity));
